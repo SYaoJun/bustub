@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+//                         BusTub
+//
+// shell.cpp
+//
+// Identification: tools/shell/shell.cpp
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
+
 #include <iostream>
 #include <string>
 #include "binder/binder.h"
@@ -29,7 +41,7 @@ auto GetWidthOfUtf8(const void *beg, const void *end, size_t *width) -> int {
 auto main(int argc, char **argv) -> int {
   ft_set_u8strwid_func(&GetWidthOfUtf8);
 
-  auto bustub = std::make_unique<bustub::BustubInstance>("test.db");
+  auto bustub = std::make_unique<bustub::BusTubInstance>("test.bustub");
 
   auto default_prompt = "bustub> ";
   auto emoji_prompt = "\U0001f6c1> ";  // the bathtub emoji

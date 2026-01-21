@@ -2,11 +2,11 @@
 //
 //                         BusTub
 //
-// aggregation_plan.h
+// window_plan.h
 //
-// Identification: src/include/execution/plans/aggregation_plan.h
+// Identification: src/include/execution/plans/window_plan.h
 //
-// Copyright (c) 2015-2021, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -40,10 +40,10 @@ class WindowFunctionPlanNode : public AbstractPlanNode {
    * @param columns All columns include the placeholder for window functions
    * @param partition_bys The partition by clause of the window functions
    * @param order_bys The order by clause of the window functions
-   * @param funcions The expressions that we are aggregating
+   * @param functions The expressions that we are aggregating
    * @param window_func_types The types that we are aggregating
    *
-   * Window Aggregation is different from normal aggregation as it outputs one row for each inputing rows,
+   * Window Aggregation is different from normal aggregation as it outputs one row for each inputting rows,
    * and can be combined with normal selected columns. The columns in WindowFunctionPlanNode contains both
    * normal selected columns and placeholder columns for window aggregations.
    *
@@ -61,8 +61,7 @@ class WindowFunctionPlanNode : public AbstractPlanNode {
   WindowFunctionPlanNode(SchemaRef output_schema, AbstractPlanNodeRef child, std::vector<uint32_t> window_func_indexes,
                          std::vector<AbstractExpressionRef> columns,
                          std::vector<std::vector<AbstractExpressionRef>> partition_bys,
-                         std::vector<std::vector<std::pair<OrderByType, AbstractExpressionRef>>> order_bys,
-                         std::vector<AbstractExpressionRef> functions,
+                         std::vector<std::vector<OrderBy>> order_bys, std::vector<AbstractExpressionRef> functions,
                          std::vector<WindowFunctionType> window_func_types)
       : AbstractPlanNode(std::move(output_schema), {std::move(child)}), columns_(std::move(columns)) {
     for (uint32_t i = 0; i < window_func_indexes.size(); i++) {
@@ -88,7 +87,7 @@ class WindowFunctionPlanNode : public AbstractPlanNode {
     AbstractExpressionRef function_;
     WindowFunctionType type_;
     std::vector<AbstractExpressionRef> partition_by_;
-    std::vector<std::pair<OrderByType, AbstractExpressionRef>> order_by_;
+    std::vector<OrderBy> order_by_;
   };
 
   /** all columns expressions */

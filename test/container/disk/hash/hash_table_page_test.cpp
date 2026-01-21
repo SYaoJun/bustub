@@ -4,9 +4,9 @@
 //
 // hash_table_page_test.cpp
 //
-// Identification: test/container/hash_table_page_test.cpp
+// Identification: test/container/disk/hash/hash_table_page_test.cpp
 //
-// Copyright (c) 2015-2021, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -24,7 +24,8 @@
 
 // // NOLINTNEXTLINE
 // TEST(HashTablePageTest, DISABLED_DirectoryPageSampleTest) {
-//   auto *disk_manager = new DiskManager("test.db");
+//   std::filesystem::path fname("test.bustub");
+//   auto *disk_manager = new DiskManager(fname);
 //   auto *bpm = new BufferPoolManager(5, disk_manager);
 
 //   // get a directory page from the BufferPoolManager
@@ -50,14 +51,15 @@
 //   // unpin the directory page now that we are done
 //   bpm->UnpinPage(directory_page_id, true);
 //   disk_manager->ShutDown();
-//   remove("test.db");
+//   remove(fname);
 //   delete disk_manager;
 //   delete bpm;
 // }
 
 // // NOLINTNEXTLINE
 // TEST(HashTablePageTest, DISABLED_BucketPageSampleTest) {
-//   auto *disk_manager = new DiskManager("test.db");
+//   std::filesystem::path fname("test.bustub");
+//   auto *disk_manager = new DiskManager(fname);
 //   auto *bpm = new BufferPoolManager(5, disk_manager);
 
 //   // get a bucket page from the BufferPoolManager
@@ -108,7 +110,7 @@
 //   // unpin the directory page now that we are done
 //   bpm->UnpinPage(bucket_page_id, true);
 //   disk_manager->ShutDown();
-//   remove("test.db");
+//   remove(fname);
 //   delete disk_manager;
 //   delete bpm;
 // }

@@ -1,25 +1,32 @@
 //===----------------------------------------------------------------------===//
 //
-//                         CMU-DB Project (15-445/645)
-//                         ***DO NO SHARE PUBLICLY***
+//                         BusTub
 //
-// Identification: src/include/index/index_iterator.h
+// index_iterator.h
 //
-// Copyright (c) 2018, Carnegie Mellon University Database Group
+// Identification: src/include/storage/index/index_iterator.h
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
+
 /**
  * index_iterator.h
  * For range scan of b+ tree
  */
 #pragma once
+#include <utility>
+#include "buffer/traced_buffer_pool_manager.h"
+#include "common/config.h"
+#include "common/macros.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
 
 namespace bustub {
 
-#define INDEXITERATOR_TYPE IndexIterator<KeyType, ValueType, KeyComparator>
+#define INDEXITERATOR_TYPE IndexIterator<KeyType, ValueType, KeyComparator, NumTombs>
+#define SHORT_INDEXITERATOR_TYPE IndexIterator<KeyType, ValueType, KeyComparator>
 
-INDEX_TEMPLATE_ARGUMENTS
+FULL_INDEX_TEMPLATE_ARGUMENTS_DEFN
 class IndexIterator {
  public:
   // you may define your own constructor based on your member variables
@@ -28,13 +35,13 @@ class IndexIterator {
 
   auto IsEnd() -> bool;
 
-  auto operator*() -> const MappingType &;
+  auto operator*() -> std::pair<const KeyType &, const ValueType &>;
 
   auto operator++() -> IndexIterator &;
 
-  auto operator==(const IndexIterator &itr) const -> bool { throw std::runtime_error("unimplemented"); }
+  auto operator==(const IndexIterator &itr) const -> bool { UNIMPLEMENTED("TODO(P2): Add implementation."); }
 
-  auto operator!=(const IndexIterator &itr) const -> bool { throw std::runtime_error("unimplemented"); }
+  auto operator!=(const IndexIterator &itr) const -> bool { UNIMPLEMENTED("TODO(P2): Add implementation."); }
 
  private:
   // add your own private member variables here

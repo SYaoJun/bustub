@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+//                         BusTub
+//
+// bpm_bench.cpp
+//
+// Identification: tools/bpm_bench/bpm_bench.cpp
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
+
 #include <chrono>
 #include <exception>
 #include <iostream>
@@ -15,7 +27,6 @@
 #include "argparse/argparse.hpp"
 #include "binder/binder.h"
 #include "buffer/buffer_pool_manager.h"
-#include "buffer/lru_k_replacer.h"
 #include "common/config.h"
 #include "common/exception.h"
 #include "common/util/string_util.h"
@@ -51,9 +62,9 @@ struct BpmTotalMetrics {
 
   void Report() {
     auto now = ClockMs();
-    auto elsped = now - start_time_;
-    auto scan_per_sec = scan_cnt_ / static_cast<double>(elsped) * 1000;
-    auto get_per_sec = get_cnt_ / static_cast<double>(elsped) * 1000;
+    auto elapsed = now - start_time_;
+    auto scan_per_sec = scan_cnt_ / static_cast<double>(elapsed) * 1000;
+    auto get_per_sec = get_cnt_ / static_cast<double>(elapsed) * 1000;
 
     fmt::print("<<< BEGIN\n");
     fmt::print("scan: {}\n", scan_per_sec);
@@ -79,13 +90,13 @@ struct BpmMetrics {
 
   void Report() {
     auto now = ClockMs();
-    auto elsped = now - start_time_;
-    if (elsped - last_report_at_ > 1000) {
+    auto elapsed = now - start_time_;
+    if (elapsed - last_report_at_ > 1000) {
       fmt::print(stderr, "[{:5.2f}] {}: total_cnt={:<10} throughput={:<10.3f} avg_throughput={:<10.3f}\n",
-                 elsped / 1000.0, reporter_, cnt_,
-                 (cnt_ - last_cnt_) / static_cast<double>(elsped - last_report_at_) * 1000,
-                 cnt_ / static_cast<double>(elsped) * 1000);
-      last_report_at_ = elsped;
+                 elapsed / 1000.0, reporter_, cnt_,
+                 (cnt_ - last_cnt_) / static_cast<double>(elapsed - last_report_at_) * 1000,
+                 cnt_ / static_cast<double>(elapsed) * 1000);
+      last_report_at_ = elapsed;
       last_cnt_ = cnt_;
     }
   }
@@ -96,7 +107,7 @@ struct BpmMetrics {
   }
 };
 
-struct BustubBenchPageHeader {
+struct BusTubBenchPageHeader {
   uint64_t seed_;
   uint64_t page_id_;
   char data_[0];
@@ -104,7 +115,7 @@ struct BustubBenchPageHeader {
 
 /// Modify the page and save some data inside
 auto ModifyPage(char *data, size_t page_idx, uint64_t seed) -> void {
-  auto *pg = reinterpret_cast<BustubBenchPageHeader *>(data);
+  auto *pg = reinterpret_cast<BusTubBenchPageHeader *>(data);
   pg->seed_ = seed;
   pg->page_id_ = page_idx;
   pg->data_[pg->seed_ % 4000] = pg->seed_ % 256;
@@ -112,7 +123,7 @@ auto ModifyPage(char *data, size_t page_idx, uint64_t seed) -> void {
 
 /// Check the page and verify the data inside
 auto CheckPageConsistentNoSeed(const char *data, size_t page_idx) -> void {
-  const auto *pg = reinterpret_cast<const BustubBenchPageHeader *>(data);
+  const auto *pg = reinterpret_cast<const BusTubBenchPageHeader *>(data);
   if (pg->page_id_ != page_idx) {
     fmt::println(stderr, "page header not consistent: page_id_={} page_idx={}", pg->page_id_, page_idx);
     std::terminate();
@@ -127,7 +138,7 @@ auto CheckPageConsistentNoSeed(const char *data, size_t page_idx) -> void {
 
 /// Check the page and verify the data inside
 auto CheckPageConsistent(const char *data, size_t page_idx, uint64_t seed) -> void {
-  const auto *pg = reinterpret_cast<const BustubBenchPageHeader *>(data);
+  const auto *pg = reinterpret_cast<const BusTubBenchPageHeader *>(data);
   if (pg->seed_ != seed) {
     fmt::println(stderr, "page seed not consistent: seed_={} seed={}", pg->seed_, seed);
     std::terminate();
@@ -195,7 +206,7 @@ auto main(int argc, char **argv) -> int {
   }
 
   auto disk_manager = std::make_unique<DiskManagerUnlimitedMemory>();
-  auto bpm = std::make_unique<BufferPoolManager>(bustub_bpm_size, disk_manager.get(), lru_k_size);
+  auto bpm = std::make_unique<BufferPoolManager>(bustub_bpm_size, disk_manager.get());
   std::vector<page_id_t> page_ids;
 
   fmt::print(stderr,
@@ -204,15 +215,11 @@ auto main(int argc, char **argv) -> int {
              bustub_page_cnt, duration_ms, enable_latency, lru_k_size, bustub_bpm_size, scan_thread_n, get_thread_n);
 
   for (size_t i = 0; i < bustub_page_cnt; i++) {
-    page_id_t page_id;
-    auto *page = bpm->NewPage(&page_id);
-    if (page == nullptr) {
-      throw std::runtime_error("new page failed");
+    page_id_t page_id = bpm->NewPage();
+    {
+      auto guard = bpm->WritePage(page_id);
+      ModifyPage(guard.GetDataMut(), i, 0);
     }
-
-    ModifyPage(page->GetData(), i, 0);
-
-    bpm->UnpinPage(page_id, true);
     page_ids.push_back(page_id);
   }
 
@@ -229,8 +236,6 @@ auto main(int argc, char **argv) -> int {
 
   for (size_t thread_id = 0; thread_id < scan_thread_n; thread_id++) {
     threads.emplace_back([bustub_page_cnt, scan_thread_n, thread_id, &page_ids, &bpm, duration_ms, &total_metrics] {
-      ModifyRecord records;
-
       BpmMetrics metrics(fmt::format("scan {:>2}", thread_id), duration_ms);
       metrics.Begin();
 
@@ -239,19 +244,11 @@ auto main(int argc, char **argv) -> int {
       size_t page_idx = page_idx_start;
 
       while (!metrics.ShouldFinish()) {
-        auto *page = bpm->FetchPage(page_ids[page_idx], AccessType::Scan);
-        if (page == nullptr) {
-          continue;
+        {
+          auto page = bpm->ReadPage(page_ids[page_idx], AccessType::Scan);
+          CheckPageConsistentNoSeed(page.GetData(), page_idx);
         }
 
-        page->WLatch();
-        auto &seed = records[page_idx];
-        CheckPageConsistent(page->GetData(), page_idx, seed);
-        seed = seed + 1;
-        ModifyPage(page->GetData(), page_idx, seed);
-        page->WUnlatch();
-
-        bpm->UnpinPage(page->GetPageId(), true, AccessType::Scan);
         page_idx += 1;
         if (page_idx >= page_idx_end) {
           page_idx = page_idx_start;
@@ -265,27 +262,26 @@ auto main(int argc, char **argv) -> int {
   }
 
   for (size_t thread_id = 0; thread_id < get_thread_n; thread_id++) {
-    threads.emplace_back([thread_id, &page_ids, &bpm, bustub_page_cnt, duration_ms, &total_metrics] {
+    threads.emplace_back([thread_id, &page_ids, &bpm, bustub_page_cnt, get_thread_n, duration_ms, &total_metrics] {
       std::random_device r;
       std::default_random_engine gen(r());
       zipfian_int_distribution<size_t> dist(0, bustub_page_cnt - 1, 0.8);
+      ModifyRecord records;
 
-      BpmMetrics metrics(fmt::format("get  {:>2}", thread_id), duration_ms);
+      BpmMetrics metrics(fmt::format("get {:>2}", thread_id), duration_ms);
       metrics.Begin();
 
       while (!metrics.ShouldFinish()) {
-        auto page_idx = dist(gen);
-        auto *page = bpm->FetchPage(page_ids[page_idx], AccessType::Lookup);
-        if (page == nullptr) {
-          fmt::println(stderr, "cannot fetch page");
-          std::terminate();
+        auto rand = dist(gen);
+        auto page_idx = std::min(rand / get_thread_n * get_thread_n + thread_id, bustub_page_cnt - 1);
+        {
+          auto page = bpm->WritePage(page_ids[page_idx], AccessType::Lookup);
+          auto &seed = records[page_idx];
+          CheckPageConsistent(page.GetData(), page_idx, seed);
+          seed = seed + 1;
+          ModifyPage(page.GetDataMut(), page_idx, seed);
         }
 
-        page->RLatch();
-        CheckPageConsistentNoSeed(page->GetData(), page_idx);
-        page->RUnlatch();
-
-        bpm->UnpinPage(page->GetPageId(), false, AccessType::Lookup);
         metrics.Tick();
         metrics.Report();
       }

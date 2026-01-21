@@ -6,7 +6,7 @@
 //
 // Identification: test/table/tuple_test.cpp
 //
-// Copyright (c) 2015-2019, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -23,6 +23,9 @@
 #include "storage/table/tuple.h"
 
 namespace bustub {
+
+static std::filesystem::path db_fname("test.bustub");
+
 // NOLINTNEXTLINE
 TEST(TupleTest, DISABLED_TableHeapTest) {
   // test1: parse create sql statement
@@ -37,14 +40,16 @@ TEST(TupleTest, DISABLED_TableHeapTest) {
   Tuple tuple = ConstructTuple(&schema);
 
   // create transaction
-  auto *disk_manager = new DiskManager("test.db");
+  auto *disk_manager = new DiskManager(db_fname);
   auto *buffer_pool_manager = new BufferPoolManager(50, disk_manager);
   auto *table = new TableHeap(buffer_pool_manager);
 
   std::vector<RID> rid_v;
   for (int i = 0; i < 5000; ++i) {
     auto rid = table->InsertTuple(TupleMeta{0, false}, tuple);
-    rid_v.push_back(*rid);
+    if (rid.has_value()) {
+      rid_v.push_back(*rid);
+    }
   }
 
   TableIterator itr = table->MakeIterator();
@@ -54,8 +59,8 @@ TEST(TupleTest, DISABLED_TableHeapTest) {
   }
 
   disk_manager->ShutDown();
-  remove("test.db");  // remove db file
-  remove("test.log");
+  remove(db_fname);  // remove db file
+  remove(disk_manager->GetLogFileName());
   delete table;
   delete buffer_pool_manager;
   delete disk_manager;

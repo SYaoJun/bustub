@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+//                         BusTub
+//
+// txn_common.h
+//
+// Identification: test/txn/txn_common.h
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
+
 #pragma once
 
 #include <src/gtest-internal-inl.h>
@@ -27,6 +39,7 @@
 #include "execution/execution_common.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 #include "gtest/gtest.h"
 #include "storage/disk/disk_manager_memory.h"
 #include "storage/index/b_plus_tree.h"
@@ -161,7 +174,7 @@ auto ExpectResult(const std::vector<std::vector<std::string>> &actual_result,
 }
 
 template <typename T>
-void Query(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn, const std::string &query,
+void Query(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn, const std::string &query,
            const std::vector<std::vector<T>> &expected_rows, bool show_result) {
   std::stringstream ss;
   auto writer = bustub::StringVectorWriter();
@@ -181,18 +194,18 @@ void Query(BustubInstance &instance, const std::string &txn_var_name, Transactio
 }
 
 template <typename T>
-void QueryHideResult(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn,
+void QueryHideResult(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn,
                      const std::string &query, const std::vector<std::vector<T>> &expected_rows) {
   Query(instance, txn_var_name, txn, query, expected_rows, false);
 }
 
 template <typename T>
-void QueryShowResult(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn,
+void QueryShowResult(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn,
                      const std::string &query, const std::vector<std::vector<T>> &expected_rows) {
   Query(instance, txn_var_name, txn, query, expected_rows, true);
 }
 
-void CheckUndoLogNum(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn, size_t expected_num) {
+void CheckUndoLogNum(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn, size_t expected_num) {
   fmt::println(stderr, "- {} var={} id={} status={} read_ts={}", Header("check_undo_log"), txn_var_name,
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs());
   auto undo_log_num = txn->GetUndoLogNum();
@@ -205,7 +218,7 @@ void CheckUndoLogNum(BustubInstance &instance, const std::string &txn_var_name, 
   }
 }
 
-void CheckUndoLogColumn(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn,
+void CheckUndoLogColumn(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn,
                         size_t expected_columns, bool enable_length_check = true) {
   fmt::println(stderr, "- {} var={} id={} status={} read_ts={}", Header("check_undo_log"), txn_var_name,
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs());
@@ -247,7 +260,7 @@ void CheckUndoLogColumn(BustubInstance &instance, const std::string &txn_var_nam
     func;                                              \
   }
 
-void Execute(BustubInstance &instance, const std::string &query, bool log = true) {
+void Execute(BusTubInstance &instance, const std::string &query, bool log = true) {
   if (log) {
     fmt::println(stderr, "- {} sql=\"{}\"", Header("execute"), query);
   }
@@ -258,7 +271,7 @@ void Execute(BustubInstance &instance, const std::string &query, bool log = true
   }
 }
 
-auto TableHeapEntry(BustubInstance &instance, TableInfo *table_info) -> size_t {
+auto TableHeapEntry(BusTubInstance &instance, TableInfo *table_info) -> size_t {
   auto table_heap = table_info->table_.get();
   auto table_iter = table_heap->MakeEagerIterator();
   size_t cnt = 0;
@@ -269,7 +282,7 @@ auto TableHeapEntry(BustubInstance &instance, TableInfo *table_info) -> size_t {
   return cnt;
 }
 
-void TableHeapEntryNoMoreThan(BustubInstance &instance, TableInfo *table_info, size_t upper_limit) {
+void TableHeapEntryNoMoreThan(BusTubInstance &instance, TableInfo *table_info, size_t upper_limit) {
   fmt::print(stderr, "- verify table heap");
   auto cnt = TableHeapEntry(instance, table_info);
   if (cnt > upper_limit) {
@@ -283,7 +296,7 @@ void TableHeapEntryNoMoreThan(BustubInstance &instance, TableInfo *table_info, s
   fmt::println(stderr, "");
 }
 
-void ExecuteTxn(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn, const std::string &query) {
+void ExecuteTxn(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn, const std::string &query) {
   fmt::println(stderr, "- {} var={} id={} status={} read_ts={} sql=\"{}\"", Header("execute"), txn_var_name,
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs(), query);
   if (txn->GetTransactionState() != TransactionState::RUNNING) {
@@ -297,7 +310,7 @@ void ExecuteTxn(BustubInstance &instance, const std::string &txn_var_name, Trans
   }
 }
 
-auto BeginTxn(BustubInstance &instance, const std::string &txn_var_name,
+auto BeginTxn(BusTubInstance &instance, const std::string &txn_var_name,
               IsolationLevel iso_lvl = IsolationLevel::SNAPSHOT_ISOLATION) -> Transaction * {
   auto txn = instance.txn_manager_->Begin(iso_lvl);
   fmt::println(stderr, "- {} var={} id={} status={} read_ts={} iso_lvl={}", Header("txn_begin"), txn_var_name,
@@ -306,13 +319,13 @@ auto BeginTxn(BustubInstance &instance, const std::string &txn_var_name,
   return txn;
 }
 
-auto BeginTxnSerializable(BustubInstance &instance, const std::string &txn_var_name) -> Transaction * {
+auto BeginTxnSerializable(BusTubInstance &instance, const std::string &txn_var_name) -> Transaction * {
   return BeginTxn(instance, txn_var_name, IsolationLevel::SERIALIZABLE);
 }
 
 const bool EXPECT_FAIL = true;
 
-auto CommitTxn(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn, bool expect_fail = false) {
+auto CommitTxn(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn, bool expect_fail = false) {
   if (txn->GetTransactionState() != TransactionState::RUNNING) {
     fmt::println(stderr, "txn not running");
     std::terminate();
@@ -345,7 +358,7 @@ auto CommitTxn(BustubInstance &instance, const std::string &txn_var_name, Transa
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs());
 }
 
-auto AbortTxn(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn) {
+auto AbortTxn(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn) {
   if (txn->GetTransactionState() != TransactionState::RUNNING &&
       txn->GetTransactionState() != TransactionState::TAINTED) {
     fmt::println(stderr, "txn not running / tainted");
@@ -360,7 +373,7 @@ auto AbortTxn(BustubInstance &instance, const std::string &txn_var_name, Transac
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs());
 }
 
-auto CheckTainted(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn) {
+auto CheckTainted(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn) {
   if (txn->GetTransactionState() != TransactionState::TAINTED) {
     fmt::println(stderr, "should set to tainted state var={} id={}", txn_var_name, txn->GetTransactionId());
     std::terminate();
@@ -369,7 +382,7 @@ auto CheckTainted(BustubInstance &instance, const std::string &txn_var_name, Tra
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs());
 }
 
-auto CommitTaintedTxn(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn) {
+auto CommitTaintedTxn(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn) {
   if (instance.txn_manager_->Commit(txn)) {
     fmt::println(stderr, "should not commit var={} id={}", txn_var_name, txn->GetTransactionId());
     std::terminate();
@@ -382,7 +395,7 @@ auto CommitTaintedTxn(BustubInstance &instance, const std::string &txn_var_name,
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs());
 }
 
-void ExecuteTxnTainted(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn,
+void ExecuteTxnTainted(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn,
                        const std::string &query) {
   fmt::println(stderr, "- {} var={} id={} status={} read_ts={} sql=\"{}\"", Header("execute"), txn_var_name,
                txn->GetTransactionIdHumanReadable(), txn->GetTransactionState(), txn->GetReadTs(), query);
@@ -396,12 +409,12 @@ void ExecuteTxnTainted(BustubInstance &instance, const std::string &txn_var_name
   CheckTainted(instance, txn_var_name, txn);
 }
 
-void GarbageCollection(BustubInstance &instance) {
+void GarbageCollection(BusTubInstance &instance) {
   fmt::println(stderr, "- {}", Header("garbage_collection"));
   instance.txn_manager_->GarbageCollection();
 }
 
-void EnsureTxnGCed(BustubInstance &instance, const std::string &txn_var_name, txn_id_t txn_id) {
+void EnsureTxnGCed(BusTubInstance &instance, const std::string &txn_var_name, txn_id_t txn_id) {
   fmt::println(stderr, "- {} var={} id={} watermark={}", Header("ensure_txn_gc_ed"), txn_var_name,
                txn_id ^ TXN_START_ID, instance.txn_manager_->GetWatermark());
   const auto &txn_map = instance.txn_manager_->txn_map_;
@@ -411,7 +424,7 @@ void EnsureTxnGCed(BustubInstance &instance, const std::string &txn_var_name, tx
   }
 }
 
-void EnsureTxnExists(BustubInstance &instance, const std::string &txn_var_name, txn_id_t txn_id) {
+void EnsureTxnExists(BusTubInstance &instance, const std::string &txn_var_name, txn_id_t txn_id) {
   fmt::println(stderr, "- {} var={} id={} watermark={}", Header("ensure_txn_exists"), txn_var_name,
                txn_id ^ TXN_START_ID, instance.txn_manager_->GetWatermark());
   const auto &txn_map = instance.txn_manager_->txn_map_;
@@ -421,7 +434,7 @@ void EnsureTxnExists(BustubInstance &instance, const std::string &txn_var_name, 
   }
 }
 
-void BumpCommitTs(BustubInstance &instance, int by = 1) {
+void BumpCommitTs(BusTubInstance &instance, int by = 1) {
   auto before_commit_ts = instance.txn_manager_->last_commit_ts_.load();
   for (int i = 0; i < by; i++) {
     auto txn = instance.txn_manager_->Begin();
@@ -432,7 +445,7 @@ void BumpCommitTs(BustubInstance &instance, int by = 1) {
                instance.txn_manager_->GetWatermark());
 }
 
-void EnsureIndexScan(BustubInstance &instance) {
+void EnsureIndexScan(BusTubInstance &instance) {
   global_disable_execution_exception_print.store(true);
   fmt::println(stderr, "- pre-test index validation");
   NoopWriter writer;
@@ -460,7 +473,7 @@ void EnsureIndexScan(BustubInstance &instance) {
 }
 
 template <typename T>
-void QueryIndex(BustubInstance &instance, const std::string &txn_var_name, Transaction *txn, const std::string &query,
+void QueryIndex(BusTubInstance &instance, const std::string &txn_var_name, Transaction *txn, const std::string &query,
                 const std::string &pk_column, const std::vector<T> &expected_pk,
                 const std::vector<std::vector<T>> &expected_rows) {
   assert(expected_pk.size() == expected_rows.size());

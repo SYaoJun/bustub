@@ -6,7 +6,7 @@
 //
 // Identification: src/include/execution/plans/aggregation_plan.h
 //
-// Copyright (c) 2015-2021, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -98,7 +98,7 @@ struct AggregateKey {
   std::vector<Value> group_bys_;
 
   /**
-   * Compares two aggregate keys for equality.
+   * Compares two aggregate keys for equality. TODO(p3): you may need to change this to handle NULLs.
    * @param other the other aggregate key to be compared with
    * @return `true` if both aggregate keys have equivalent group-by expressions, `false` otherwise
    */

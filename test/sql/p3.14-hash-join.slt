@@ -1,17 +1,17 @@
-# 5 pts
+# 4 pts
 
 # Show office hours on lecture days
 # "rowsort" means that the order of result doesn't matter.
 
 query rowsort +ensure:hash_join
 select * from
-    __mock_table_tas_2024 inner join __mock_table_schedule
+    __mock_table_tas_2025_spring inner join __mock_table_schedule
     on office_hour = day_of_week
     where has_lecture = 1;
 ----
-SDTheSlayer Monday Monday 1
-thelongmarch-azx Monday Monday 1
-lanlou1554 Wednesday Wednesday 1
+ChrisLaspias Wednesday Wednesday 1
+carpecodeum Monday Monday 1
+rmboyce Monday Monday 1
 
 
 # The real test begins...
@@ -269,6 +269,18 @@ insert into temp_2 values
     (98, 351, 8),
     (99, 722, 9);
 
+statement ok
+create table big_l(a int, b int, c int, d int);
+
+statement ok
+insert into big_l
+  select t1.colA, t1.colB, t1.colC, t1.colD
+  from temp_1 t1, temp_2 t2;
+
+query +ensure:hash_join
+select count(*) from big_l b inner join temp_2 t2 on b.a = t2.colA;
+----
+10000
 
 statement ok
 create table temp_3(colA int, colB int);

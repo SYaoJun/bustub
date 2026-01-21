@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+//                         BusTub
+//
+// watermark.cpp
+//
+// Identification: src/concurrency/watermark.cpp
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
+
 #include "concurrency/watermark.h"
 #include <exception>
 #include "common/exception.h"
@@ -9,11 +21,11 @@ auto Watermark::AddTxn(timestamp_t read_ts) -> void {
     throw Exception("read ts < commit ts");
   }
 
-  // TODO(fall2023): implement me!
+  // TODO(P4): implement me!
 }
 
 auto Watermark::RemoveTxn(timestamp_t read_ts) -> void {
-  // TODO(fall2023): implement me!
+  // TODO(P4): implement me!
 }
 
 }  // namespace bustub

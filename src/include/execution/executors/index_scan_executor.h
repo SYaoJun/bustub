@@ -6,7 +6,7 @@
 //
 // Identification: src/include/execution/executors/index_scan_executor.h
 //
-// Copyright (c) 2015-20, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -28,18 +28,14 @@ namespace bustub {
 
 class IndexScanExecutor : public AbstractExecutor {
  public:
-  /**
-   * Creates a new index scan executor.
-   * @param exec_ctx the executor context
-   * @param plan the index scan plan to be executed
-   */
   IndexScanExecutor(ExecutorContext *exec_ctx, const IndexScanPlanNode *plan);
 
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }
 
   void Init() override;
 
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(std::vector<bustub::Tuple> *tuple_batch, std::vector<bustub::RID> *rid_batch, size_t batch_size)
+      -> bool override;
 
  private:
   /** The index scan plan node to be executed. */

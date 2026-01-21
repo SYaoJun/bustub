@@ -6,7 +6,7 @@
 //
 // Identification: src/include/execution/executors/filter_executor.h
 //
-// Copyright (c) 2015-2022, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -28,25 +28,13 @@ namespace bustub {
  */
 class FilterExecutor : public AbstractExecutor {
  public:
-  /**
-   * Construct a new FilterExecutor instance.
-   * @param exec_ctx The executor context
-   * @param plan The filter plan to be executed
-   * @param child_executor The child executor that feeds the filter
-   */
   FilterExecutor(ExecutorContext *exec_ctx, const FilterPlanNode *plan,
                  std::unique_ptr<AbstractExecutor> &&child_executor);
 
-  /** Initialize the filter */
   void Init() override;
 
-  /**
-   * Yield the next tuple from the filter.
-   * @param[out] tuple The next tuple produced by the filter
-   * @param[out] rid The next tuple RID produced by the filter
-   * @return `true` if a tuple was produced, `false` if there are no more tuples
-   */
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(std::vector<bustub::Tuple> *tuple_batch, std::vector<bustub::RID> *rid_batch, size_t batch_size)
+      -> bool override;
 
   /** @return The output schema for the filter plan */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }
@@ -57,5 +45,12 @@ class FilterExecutor : public AbstractExecutor {
 
   /** The child executor from which tuples are obtained */
   std::unique_ptr<AbstractExecutor> child_executor_;
+
+  /** child tuple batch & child RID batch */
+  std::vector<Tuple> child_tuples_{};
+  std::vector<RID> child_rids_{};
+
+  /** child tuple batch offset */
+  size_t child_offset_ = 0;
 };
 }  // namespace bustub

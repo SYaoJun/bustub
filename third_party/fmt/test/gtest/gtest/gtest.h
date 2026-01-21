@@ -336,7 +336,7 @@
 //                         string.
 //
 // Integer types:
-//   TypeWithSize   - maps an integer to a int type.
+//   TypeWithSize   - maps an integer to an int type.
 //   TimeInMillis   - integers of known sizes.
 //   BiggestInt     - the biggest signed integer type.
 //
@@ -6390,17 +6390,18 @@ class MatcherBase : private MatcherDescriberInterface {
   }
 
  protected:
-  MatcherBase() : vtable_(nullptr) {}
+  MatcherBase() : vtable_(nullptr), buffer_() {}
 
   // Constructs a matcher from its implementation.
   template <typename U>
-  explicit MatcherBase(const MatcherInterface<U>* impl) {
+  explicit MatcherBase(const MatcherInterface<U>* impl)
+      : vtable_(nullptr), buffer_() {
     Init(impl);
   }
 
   template <typename M, typename = typename std::remove_reference<
                             M>::type::is_gtest_matcher>
-  MatcherBase(M&& m) {  // NOLINT
+  MatcherBase(M&& m) : vtable_(nullptr), buffer_() {  // NOLINT
     Init(std::forward<M>(m));
   }
 
@@ -6660,7 +6661,7 @@ class GTEST_API_ Matcher<std::string>
 
 #if GTEST_INTERNAL_HAS_STRING_VIEW
 // The following two specializations allow the user to write str
-// instead of Eq(str) and "foo" instead of Eq("foo") when a absl::string_view
+// instead of Eq(str) and "foo" instead of Eq("foo") when an absl::string_view
 // matcher is expected.
 template <>
 class GTEST_API_ Matcher<const internal::StringView&>

@@ -6,7 +6,7 @@
 //
 // Identification: src/include/execution/executors/projection_executor.h
 //
-// Copyright (c) 2015-2022, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -28,24 +28,11 @@ namespace bustub {
  */
 class ProjectionExecutor : public AbstractExecutor {
  public:
-  /**
-   * Construct a new ProjectionExecutor instance.
-   * @param exec_ctx The executor context
-   * @param plan The projection plan to be executed
-   */
   ProjectionExecutor(ExecutorContext *exec_ctx, const ProjectionPlanNode *plan,
                      std::unique_ptr<AbstractExecutor> &&child_executor);
 
-  /** Initialize the projection */
   void Init() override;
-
-  /**
-   * Yield the next tuple from the projection.
-   * @param[out] tuple The next tuple produced by the projection
-   * @param[out] rid The next tuple RID produced by the projection
-   * @return `true` if a tuple was produced, `false` if there are no more tuples
-   */
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(std::vector<Tuple> *tuple_batch, std::vector<RID> *rid_batch, size_t batch_size) -> bool override;
 
   /** @return The output schema for the projection plan */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }
@@ -56,5 +43,12 @@ class ProjectionExecutor : public AbstractExecutor {
 
   /** The child executor from which tuples are obtained */
   std::unique_ptr<AbstractExecutor> child_executor_;
+
+  /** child tuple batch & child RID batch */
+  std::vector<Tuple> child_tuples_{};
+  std::vector<RID> child_rids_{};
+
+  /** child tuple batch offset */
+  size_t child_offset_ = 0;
 };
 }  // namespace bustub

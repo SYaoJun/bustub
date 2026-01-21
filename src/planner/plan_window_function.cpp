@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+//                         BusTub
+//
+// plan_window_function.cpp
+//
+// Identification: src/planner/plan_window_function.cpp
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
+
 #include <memory>
 #include <utility>
 
@@ -28,23 +40,28 @@ namespace bustub {
 
 // TODO(chi): clang-tidy on macOS will suggest changing it to const reference. Looks like a bug.
 
-void CheckOrderByCompatible(
-    const std::vector<std::vector<std::pair<OrderByType, AbstractExpressionRef>>> &order_by_exprs) {
+void CheckOrderByCompatible(const std::vector<std::vector<OrderBy>> &order_by_exprs) {
   if (order_by_exprs.empty()) {
     // either or window functions not having order by clause
     return;
   }
   // or all order by clause are the same
-  std::vector<std::pair<OrderByType, AbstractExpressionRef>> first_order_by = order_by_exprs[0];
+  std::vector<OrderBy> first_order_by = order_by_exprs[0];
   for (auto &order_by : order_by_exprs) {
     if (order_by.size() != first_order_by.size()) {
       throw Exception("order by clause of window functions are not compatible");
     }
     for (uint32_t i = 0; i < order_by.size(); i++) {
-      if (order_by[i].first != first_order_by[i].first) {
+      const auto &[first_order_by_type, first_order_null, first_expr] = first_order_by[i];
+      const auto &[order_by_type, order_null, expr] = order_by[i];
+
+      if (order_by_type != first_order_by_type) {
         throw Exception("order by clause of window functions are not compatible");
       }
-      if (order_by[i].second->ToString() != first_order_by[i].second->ToString()) {
+      if (order_null != first_order_null) {
+        throw Exception("order by clause of window functions are not compatible");
+      }
+      if (expr->ToString() != first_expr->ToString()) {
         throw Exception("order by clause of window functions are not compatible");
       }
     }
@@ -63,7 +80,7 @@ auto Planner::PlanSelectWindow(const SelectStatement &statement, AbstractPlanNod
   std::vector<uint32_t> window_func_indexes;
   std::vector<WindowFunctionType> window_func_types;
   std::vector<std::vector<AbstractExpressionRef>> partition_by_exprs;
-  std::vector<std::vector<std::pair<OrderByType, AbstractExpressionRef>>> order_by_exprs;
+  std::vector<std::vector<OrderBy>> order_by_exprs;
   std::vector<AbstractExpressionRef> arg_exprs;
 
   for (uint32_t i = 0; i < statement.select_list_.size(); i++) {
@@ -98,7 +115,7 @@ auto Planner::PlanSelectWindow(const SelectStatement &statement, AbstractPlanNod
     if (window_call.start_ != WindowBoundary::UNBOUNDED_PRECEDING ||
         (window_call.end_ != WindowBoundary::CURRENT_ROW_ROWS &&
          window_call.end_ != WindowBoundary::CURRENT_ROW_RANGE)) {
-      throw Exception("Bustub currently only support window function with default window frame settings");
+      throw Exception("BusTub currently only support window function with default window frame settings");
     }
     std::vector<AbstractExpressionRef> partition_by;
     for (auto &item : window_call.partition_by_) {
@@ -111,11 +128,11 @@ auto Planner::PlanSelectWindow(const SelectStatement &statement, AbstractPlanNod
       throw Exception("order by clause is mandatory for rank function");
     }
 
-    std::vector<std::pair<OrderByType, AbstractExpressionRef>> order_by;
+    std::vector<OrderBy> order_by;
     for (const auto &item : window_call.order_bys_) {
       auto [_, expr] = PlanExpression(*item->expr_, {child});
       auto abstract_expr = std::move(expr);
-      order_by.emplace_back(item->type_, abstract_expr);
+      order_by.emplace_back(item->type_, item->null_order_, abstract_expr);
     }
     order_by_exprs.emplace_back(std::move(order_by));
 

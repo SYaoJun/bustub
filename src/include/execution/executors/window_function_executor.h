@@ -6,7 +6,7 @@
 //
 // Identification: src/include/execution/executors/window_function_executor.h
 //
-// Copyright (c) 2015-2022, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -25,7 +25,7 @@ namespace bustub {
 /**
  * The WindowFunctionExecutor executor executes a window function for columns using window function.
  *
- * Window function is different from normal aggregation as it outputs one row for each inputing rows,
+ * Window function is different from normal aggregation as it outputs one row for each inputting rows,
  * and can be combined with normal selected columns. The columns in WindowFunctionPlanNode contains both
  * normal selected columns and placeholder columns for window functions.
  *
@@ -51,7 +51,7 @@ namespace bustub {
  *    }
  *
  * Your executor should use child executor and exprs in columns to produce selected columns except for window
- * function columns, and use window_agg_indexes, partition_bys, order_bys, functionss and window_agg_types to
+ * function columns, and use window_agg_indexes, partition_bys, order_bys, functions and window_agg_types to
  * generate window function columns results. Directly use placeholders for window function columns in columns is
  * not allowed, as it contains invalid column id.
  *
@@ -62,24 +62,13 @@ namespace bustub {
  */
 class WindowFunctionExecutor : public AbstractExecutor {
  public:
-  /**
-   * Construct a new WindowFunctionExecutor instance.
-   * @param exec_ctx The executor context
-   * @param plan The window aggregation plan to be executed
-   */
   WindowFunctionExecutor(ExecutorContext *exec_ctx, const WindowFunctionPlanNode *plan,
                          std::unique_ptr<AbstractExecutor> &&child_executor);
 
-  /** Initialize the window aggregation */
   void Init() override;
 
-  /**
-   * Yield the next tuple from the window aggregation.
-   * @param[out] tuple The next tuple produced by the window aggregation
-   * @param[out] rid The next tuple RID produced by the window aggregation
-   * @return `true` if a tuple was produced, `false` if there are no more tuples
-   */
-  auto Next(Tuple *tuple, RID *rid) -> bool override;
+  auto Next(std::vector<bustub::Tuple> *tuple_batch, std::vector<bustub::RID> *rid_batch, size_t batch_size)
+      -> bool override;
 
   /** @return The output schema for the window aggregation plan */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }

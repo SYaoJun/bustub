@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+//                         BusTub
+//
+// wasm-bpt-printer.cpp
+//
+// Identification: tools/wasm-bpt-printer/wasm-bpt-printer.cpp
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
+
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -41,12 +53,11 @@ auto UsageMessage() -> std::string {
 using BPT = BPlusTree<GenericKey<8>, RID, GenericComparator<8>>;
 BPT *tree = nullptr;
 BufferPoolManager *bpm = nullptr;
-Transaction *transaction = nullptr;
 std::unique_ptr<bustub::Schema> key_schema = nullptr;
 
 extern "C" {
 
-auto BustubInit(int leaf_max_size, int internal_max_size) -> int {
+auto BusTubInit(int leaf_max_size, int internal_max_size) -> int {
   // create KeyComparator and index schema
   std::string create_stmt = "a bigint";
   try {
@@ -57,18 +68,16 @@ auto BustubInit(int leaf_max_size, int internal_max_size) -> int {
 
   GenericComparator<8> comparator(key_schema.get());
 
-  auto *disk_manager = new DiskManager("test.db");
+  auto *disk_manager = new DiskManager("test.bustub");
   bpm = new BufferPoolManager(100, disk_manager);
   // create header_page
-  page_id_t page_id;
-  bpm->NewPage(&page_id);
+  auto page_id = bpm->NewPage();
   // create b+ tree
   tree = new BPT("foo_pk", page_id, bpm, comparator, leaf_max_size, internal_max_size);
-  transaction = new Transaction(0);
   return 0;
 }
 
-auto BustubApplyCommand(const char *input, char *output, uint16_t len) -> int {
+auto BusTubApplyCommand(const char *input, char *output, uint16_t len) -> int {
   GenericKey<8> index_key;
   int64_t key = 0;
   RID rid;
@@ -87,7 +96,7 @@ auto BustubApplyCommand(const char *input, char *output, uint16_t len) -> int {
         return 1;
       }
       index_key.SetFromInteger(key);
-      tree->Remove(index_key, transaction);
+      tree->Remove(index_key);
       break;
     case 'i':
       ss >> key;
@@ -96,7 +105,7 @@ auto BustubApplyCommand(const char *input, char *output, uint16_t len) -> int {
       }
       rid.Set(static_cast<int32_t>(key >> 32), static_cast<int>(key & 0xFFFFFFFF));
       index_key.SetFromInteger(key);
-      tree->Insert(index_key, rid, transaction);
+      tree->Insert(index_key, rid);
       break;
     case '?':
       std::cout << UsageMessage();

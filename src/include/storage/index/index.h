@@ -6,7 +6,7 @@
 //
 // Identification: src/include/storage/index/index.h
 //
-// Copyright (c) 2015-2019, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -111,7 +111,7 @@ class IndexMetadata {
 /**
  * class Index - Base class for derived indices of different types
  *
- * The index structure majorly maintains information on the schema of the
+ * The index structure primarily maintains information on the schema of the
  * underlying table and the mapping relation between index key
  * and tuple key, and provides an abstracted way for the external world to
  * interact with the underlying index implementation without exposing

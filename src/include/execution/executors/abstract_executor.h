@@ -6,11 +6,13 @@
 //
 // Identification: src/include/execution/executors/abstract_executor.h
 //
-// Copyright (c) 2015-2021, Carnegie Mellon University Database Group
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
 #pragma once
+
+#include <vector>
 
 #include "execution/executor_context.h"
 #include "storage/table/tuple.h"
@@ -45,7 +47,8 @@ class AbstractExecutor {
    * @param[out] rid The next tuple RID produced by this executor
    * @return `true` if a tuple was produced, `false` if there are no more tuples
    */
-  virtual auto Next(Tuple *tuple, RID *rid) -> bool = 0;
+  virtual auto Next(std::vector<bustub::Tuple> *tuple_batch, std::vector<bustub::RID> *rid_batch, size_t batch_size)
+      -> bool = 0;
 
   /** @return The schema of the tuples that this executor produces */
   virtual auto GetOutputSchema() const -> const Schema & = 0;

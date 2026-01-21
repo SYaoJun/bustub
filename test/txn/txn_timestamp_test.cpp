@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+//                         BusTub
+//
+// txn_timestamp_test.cpp
+//
+// Identification: test/txn/txn_timestamp_test.cpp
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
+
 #include <chrono>  // NOLINT
 #include <cstdio>
 #include <exception>
@@ -49,7 +61,7 @@ TEST(TxnTsTest, DISABLED_WatermarkPerformance) {  // NOLINT
 }
 
 TEST(TxnTsTest, DISABLED_TimestampTracking) {  // NOLINT
-  auto bustub = std::make_unique<BustubInstance>();
+  auto bustub = std::make_unique<BusTubInstance>();
 
   auto txn0 = bustub->txn_manager_->Begin();
   ASSERT_EQ(txn0->GetReadTs(), 0);

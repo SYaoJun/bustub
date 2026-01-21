@@ -1,10 +1,10 @@
 # 4 pts
 
-# How many TAs are there in 2024 Spring?
+# How many TAs are there in 2025 Fall?
 query
-select count(*) from __mock_table_tas_2024;
+select count(*) from __mock_table_tas_2025_fall;
 ----
-10
+8
 
 # The real test process begins...
 

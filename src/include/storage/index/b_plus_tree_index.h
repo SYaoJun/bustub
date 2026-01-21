@@ -1,11 +1,12 @@
 //===----------------------------------------------------------------------===//
 //
-//                         CMU-DB Project (15-445/645)
-//                         ***DO NO SHARE PUBLICLY***
+//                         BusTub
 //
-// Identification: src/include/index/b_plus_tree_index.h
+// b_plus_tree_index.h
 //
-// Copyright (c) 2018, Carnegie Mellon University Database Group
+// Identification: src/include/storage/index/b_plus_tree_index.h
+//
+// Copyright (c) 2015-2025, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 
@@ -19,6 +20,8 @@
 #include "container/hash/hash_function.h"
 #include "storage/index/b_plus_tree.h"
 #include "storage/index/index.h"
+#include "storage/index/index_iterator.h"
+#include "storage/page/b_plus_tree_page.h"
 
 namespace bustub {
 
@@ -35,11 +38,11 @@ class BPlusTreeIndex : public Index {
 
   void ScanKey(const Tuple &key, std::vector<RID> *result, Transaction *transaction) override;
 
-  auto GetBeginIterator() -> INDEXITERATOR_TYPE;
+  auto GetBeginIterator() -> SHORT_INDEXITERATOR_TYPE;
 
-  auto GetBeginIterator(const KeyType &key) -> INDEXITERATOR_TYPE;
+  auto GetBeginIterator(const KeyType &key) -> SHORT_INDEXITERATOR_TYPE;
 
-  auto GetEndIterator() -> INDEXITERATOR_TYPE;
+  auto GetEndIterator() -> SHORT_INDEXITERATOR_TYPE;
 
  protected:
   // comparator for key
